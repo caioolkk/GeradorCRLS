@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gerador CRLS</title>
+  <style>
+    /* RESET */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #0f0f0f;
+      color: #e0e0e0;
+      line-height: 1.6;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    body.light {
+      background-color: #f8f8f8;
+      color: #1a1a1a;
+    }
+
+    body.light .container {
+      background-color: #fff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    body.light button,
+    body.light .tab,
+    body.light .result-section,
+    body.light textarea {
+      background-color: #fff;
+      color: #1a1a1a;
+      border-color: #ddd;
+    }
+
+    body.light .result-title,
+    body.light .subtitle,
+    body.light .history-title,
+    body.light .history-header {
+      color: #333;
+    }
+
+    body.light .copy-btn-line,
+    body.light #copyAllBtn {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    body.light .copy-btn-line:hover,
+    body.light #copyAllBtn:hover {
+      background-color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background-color: #1a1a1a;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transition: all 0.4s ease;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.6rem;
+      margin-bottom: 12px;
+      color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      font-weight: 600;
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+    }
+
+    .theme-toggle:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body.light .theme-toggle:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #aaa;
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+
+    .input-section {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 650px;
+      height: 90px;
+      padding: 16px;
+      border: 1px solid #555;
+      border-radius: 10px;
+      background-color: #222;
+      color: #fff;
+      font-size: 1rem;
+      resize: none;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #888;
+      box-shadow: 0 0 0 2px rgba(120, 120, 120, 0.3);
+    }
+
+    textarea::placeholder {
+      color: #777;
+    }
+
+    button {
+      padding: 12px 26px;
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #555;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      padding: 14px 24px;
+      background-color: #2a2a2a;
+      color: #ccc;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab.active {
+      background-color: #555;
+      color: white;
+      font-weight: 600;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .tab:hover::after {
+      opacity: 1;
+    }
+
+    .result-section {
+      margin-top: 30px;
+      padding: 24px;
+      background-color: #222;
+      border-radius: 12px;
+      border: 1px solid #444;
+    }
+
+    .result-title {
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+      color: #ccc;
+      font-weight: 500;
+    }
+
+    .result-content {
+      font-family: monospace;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: #e0e0e0;
+      background-color: #1e1e1e;
+      padding: 16px;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      margin-bottom: 16px;
+      border: 1px solid #444;
+    }
+
+    .result-comma {
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #aaa;
+      background-color: #252525;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px dashed #555;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    #copyAllBtn {
+      display: inline-flex;
+      padding: 10px 18px;
+      background-color: #3a3a3a;
+      color: #ddd;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      align-self: flex-start;
+    }
+
+    #copyAllBtn:hover {
+      background-color: #555;
+      color: white;
+    }
+
+    body.light #copyAllBtn {
+      background-color: #eee;
+      color: #333;
+    }
+
+    body.light #copyAllBtn:hover {
+      background-color: #ddd;
+    }
+
+    .loading {
+      text-align: center;
+      color: #aaa;
+      font-style: italic;
+      margin: 20px 0;
+      opacity: 0;
+      height: 0;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    .loading.show {
+      opacity: 1;
+      height: auto;
+      margin: 24px 0;
+    }
+
+    .history-section {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #444;
+    }
+
+    .history-title {
+      font-size: 1.3rem;
+      color: #ccc;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .history-item {
+      background-color: #222;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      border: 1px solid #444;
+      font-size: 0.92rem;
+    }
+
+    .history-header {
+      font-weight: 600;
+      color: #ddd;
+      margin-bottom: 6px;
+    }
+
+    .history-content {
+      color: #aaa;
+      font-family: monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+    }
+
+    .clear-history {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .clear-history:hover {
+      color: #ccc;
+      text-decoration: underline;
+    }
+
+    .feedback {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4c9e4c;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s ease;
+    }
+
+    .feedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 15px;
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 2.1rem;
+      }
+
+      textarea {
+        height: 80px;
+        padding: 14px;
+      }
+
+      .tabs {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .tab {
+        width: 100%;
+        text-align: center;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      Gerador CRLS
+      <button class="theme-toggle" id="themeToggle">🌙</button>
+    </h1>
+    <p class="subtitle">Gere combinações, variações ou permutações de forma simples</p>
+
+    <!-- Abas -->
+    <div class="tabs">
+      <div class="tab active" data-tab="combinations">Combinações</div>
+      <div class="tab" data-tab="variations">Variações (com repetição)</div>
+      <div class="tab" data-tab="permutations">Permutações</div>
+    </div>
+
+    <!-- Entrada -->
+    <div class="input-section">
+      <textarea id="inputNumbers" placeholder="Digite os números separados por vírgula (ex: 1, 932, 32, 2)"></textarea>
+      <button id="generateBtn">Gerar Resultados</button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">Processando...</div>
+
+    <!-- Resultado -->
+    <div class="result-section">
+      <div class="result-title">Resultado:</div>
+      <div id="resultContent" class="result-content"></div>
+      <div class="result-comma" id="resultComma"></div>
+      <button id="copyAllBtn">Copiar Todos</button>
+    </div>
+
+    <!-- Histórico -->
+    <div class="history-section">
+      <div class="history-title">Histórico de Gerações</div>
+      <div id="historyList"></div>
+      <div class="clear-history" id="clearHistory">Limpar histórico</div>
+    </div>
+  </div>
+
+  <!-- Feedback de cópia -->
+  <div class="feedback" id="feedback">Copiado!</div>
+
+  <script>
+    // Elementos
+    const input = document.getElementById('inputNumbers');
+    const generateBtn = document.getElementById('generateBtn');
+    const resultContent = document.getElementById('resultContent');
+    const resultComma = document.getElementById('resultComma');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const loading = document.getElementById('loading');
+    const feedback = document.getElementById('feedback');
+    const tabs = document.querySelectorAll('.tab');
+    const themeToggle = document.getElementById('themeToggle');
+    const historyList = document.getElementById('historyList');
+    const clearHistory = document.getElementById('clearHistory');
+
+    let activeTab = 'combinations';
+    let isDark = true;
+
+    // Carregar estado
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem('geradorCRLS_theme');
+      const savedHistory = localStorage.getItem('geradorCRLS_history');
+
+      if (savedTheme === 'light') {
+        isDark = false;
+        document.body.classList.add('light');
+        themeToggle.textContent = '☀️';
+      }
+
+      if (savedHistory) {
+        try {
+          const history = JSON.parse(savedHistory);
+          renderHistory(history);
+        } catch (e) {
+          localStorage.removeItem('geradorCRLS_history');
+        }
+      }
+    });
+
+    // Troca de tema
+    themeToggle.addEventListener('click', () => {
+      isDark = !isDark;
+      if (isDark) {
+        document.body.classList.remove('light');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('geradorCRLS_theme', 'dark');
+      } else {
+        document.body.classList.add('light');
+        themeToggle.textContent = '☀️';
+        localStorage.setItem('geradorCRLS_theme', 'light');
+      }
+    });
+
+    // Troca de abas com animação
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.getAttribute('data-tab');
+        resultContent.textContent = '';
+        resultComma.textContent = '';
+      });
+    });
+
+    // Funções de geração
+    function combinations(arr) {
+      const result = [];
+      const n = arr.length;
+      for (let i = 1; i < (1 << n); i++) {
+        const subset = [];
+        for (let j = 0; j < n; j++) {
+          if (i & (1 << j)) subset.push(arr[j]);
+        }
+        result.push(subset);
+      }
+      return result;
+    }
+
+    function variationsWithRepetition(arr, k) {
+      if (k === 1) return arr.map(x => [x]);
+      const prev = variationsWithRepetition(arr, k - 1);
+      const result = [];
+      for (const x of arr) {
+        for (const p of prev) {
+          result.push([x].concat(Array.isArray(p) ? p : [p]));
+        }
+      }
+      return result;
+    }
+
+    function permutations(arr) {
+      if (arr.length <= 1) return [arr];
+      const result = [];
+      for (let i = 0; i < arr.length; i++) {
+        const head = arr[i];
+        const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+        const perms = permutations(rest);
+        for (const p of perms) {
+          result.push([head].concat(p));
+        }
+      }
+      return result;
+    }
+
+    // Gerar resultados
+    generateBtn.addEventListener('click', () => {
+      const rawInput = input.value.trim();
+      if (!rawInput) {
+        alert('Por favor, insira números separados por vírgula.');
+        return;
+      }
+
+      const nums = rawInput.split(',')
+                           .map(n => n.trim())
+                           .filter(n => n !== '');
+      
+      if (nums.some(isNaN)) {
+        alert('Insira apenas números válidos.');
+        return;
+      }
+
+      if (nums.length > 8 && !confirm(`Você inseriu ${nums.length} números. Pode gerar muitos resultados. Continuar?`)) return;
+
+      loading.classList.add('show');
+      resultContent.textContent = '';
+      resultComma.textContent = '';
+
+      setTimeout(() => {
+        let results = [];
+        let title = '';
+        let fullList = [];
+
+        try {
+          if (activeTab === 'permutations') {
+            results = permutations(nums);
+            title = `Permutações (${results.length} resultados)`;
+            fullList = results.map(p => p.join(''));
+
+          } else if (activeTab === 'combinations') {
+            results = combinations(nums);
+            title = `Combinações (${results.length} resultados)`;
+            fullList = results.map(c => c.join(''));
+
+          } else if (activeTab === 'variations') {
+            const k = parseInt(prompt('Quantos dígitos por variação? (1 a 6)', '2')) || 2;
+            if (k < 1 || k > 6) {
+              resultContent.textContent = 'Tamanho inválido.';
+              loading.classList.remove('show');
+              return;
+            }
+            results = variationsWithRepetition(nums, k);
+            title = `Variações (${results.length} resultados, ${k} dígitos)`;
+            fullList = results.map(v => v.join(''));
+          }
+
+          // Exibir em coluna
+          resultContent.innerHTML = `<strong>${title}</strong>\n\n${fullList.join('\n')}`;
+
+          // Exibir em linha com vírgulas
+          resultComma.innerHTML = `<strong>Separado por vírgulas:</strong>\n${fullList.join(', ')}`;
+
+          // Copiar todos
+          copyAllBtn.onclick = () => {
+            const text = fullList.join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+              feedback.classList.add('show');
+              setTimeout(() => feedback.classList.remove('show'), 1500);
+            });
+          };
+
+          // Salvar no histórico
+          saveToHistory({
+            tab: activeTab,
+            input: nums.join(', '),
+            title,
+            count: fullList.length,
+            sample: fullList.slice(0, 3).join(', ') + (fullList.length > 3 ? '...' : '')
+          });
+
+        } catch (e) {
+          resultContent.textContent = 'Erro ao gerar: entrada muito grande.';
+        } finally {
+          loading.classList.remove('show');
+        }
+      }, 300);
+    });
+
+    // Histórico
+    function saveToHistory(item) {
+      const history = JSON.parse(localStorage.getItem('geradorCRLS_history') || '[]');
+      const newHistory = [item, ...history.slice(0, 49)];
+      localStorage.setItem('geradorCRLS_history', JSON.stringify(newHistory));
+      renderHistory(newHistory);
+    }
+
+    function renderHistory(history) {
+      historyList.innerHTML = '';
+      if (history.length === 0) {
+        const empty = document.createElement('div');
+        empty.textContent = 'Nenhuma geração ainda.';
+        empty.style.color = '#777';
+        empty.style.fontStyle = 'italic';
+        historyList.appendChild(empty);
+        return;
+      }
+
+      history.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'history-item';
+        el.innerHTML = `
+          <div class="history-header">${getTabLabel(item.tab)}: ${item.input}</div>
+          <div class="history-content">${item.title}<br>${item.sample}</div>
+        `;
+        historyList.appendChild(el);
+      });
+    }
+
+    function getTabLabel(tab) {
+      return { permutations: '🔄 Permutações', combinations: '⊞ Combinações', variations: '∞ Variações' }[tab];
+    }
+
+    // Limpar histórico
+    clearHistory.addEventListener('click', () => {
+      if (confirm('Limpar todo o histórico?')) {
+        localStorage.removeItem('geradorCRLS_history');
+        renderHistory([]);
+      }
+    });
+  </script>
+</body>
+</html>
